@@ -23,5 +23,3 @@ cd $SRC/build
     --prefix=$OUT
 make
 make install
-
-ls -l $OUT
