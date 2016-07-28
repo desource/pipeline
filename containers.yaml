@@ -3,6 +3,8 @@ groups:
   jobs:
     - haproxy
     - nginx
+    - java
+    - kibana
 - name: base-builds
   jobs:
     - alpine-build
@@ -25,6 +27,18 @@ resources:
   type: git
   source:
     uri: https://github.com/desource/container-nginx.git
+    branch: concourse
+
+- name: java-src
+  type: git
+  source:
+    uri: https://github.com/desource/container-java.git
+    branch: concourse
+
+- name: kibana-src
+  type: git
+  source:
+    uri: https://github.com/desource/container-kibana.git
     branch: concourse
 
 - name: quay-io-desource-alpine-build
@@ -59,6 +73,27 @@ resources:
   type: docker-image
   source:
     repository: quay.io/desource/nginx
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: java-docker
+  type: docker-image
+  source:
+    repository: quay.io/desource/java
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    
+- name: kibana-docker
+  type: docker-image
+  source:
+    repository: quay.io/desource/kibana
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: heka-docker
+  type: docker-image
+  source:
+    repository: quay.io/desource/heka
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
@@ -97,11 +132,29 @@ jobs:
     params:
       build: nginx-build
 
-# - name: java
-#   plan:
-#   - get: images
-#   - task: glibc
-#     file: images/glibc/build.yaml
+- name: java
+  plan:
+  - aggregate:
+      - get: common
+      - get: java-src
+        trigger: true
+  - task: build-glibc
+    file: common/glibc/build.yaml
+  - task: build-java
+    file: java-src/build.yaml
+  - put: java-docker
+    params:
+      build: java-build
+
+- name: kibana
+  plan:
+  - get: kibana-src
+    trigger: true
+  - task: build-kibana
+    file: kibana-src/build.yaml
+  - put: kibana-docker
+    params:
+      build: kibana-build
 
 - name: alpine-build
   serial: true

@@ -22,3 +22,4 @@ cd $SRC/build
     --disable-sanity-checks \
     --prefix=$OUT
 make
+make install
