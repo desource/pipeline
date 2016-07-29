@@ -7,6 +7,7 @@ groups:
     - elasticsearch
     - kibana
     - heka
+    - skydns
 - name: base-containers
   jobs:
     - alpine-build
@@ -59,23 +60,24 @@ resources:
   type: git
   source:
     uri: https://github.com/desource/container-skydns.git
-    branch: concourse
-
-- name: heka-git
-  type: git
-  source:
-    uri: https://github.com/mozilla-services/heka.git
 
 - name: skydns-git
   type: git
   source:
     uri: https://github.com/skynetservices/skydns.git
     branch: 2.5.3a
+    
+- name: heka-git
+  type: git
+  source:
+    uri: https://github.com/mozilla-services/heka.git
 
 - name: heka-s3
   type: s3
   source:
     bucket: desource.net
+    regexp: builds/heka/(.*)
+    versioned_file: builds/heka/versions
     access_key_id: {{s3-access-key}}
     secret_access_key: {{s3-secret-key}}
     
@@ -202,7 +204,7 @@ jobs:
   plan:
   - aggregate:
       - get: java-docker
-        trigger: true
+        passed: [java]
       - get: elasticsearch-src
         trigger: true
   - task: build-elasticsearch
@@ -231,7 +233,7 @@ jobs:
     file: heka-container-src/build.yaml
   - put: heka-s3
     params:
-      file: hekad
+      file: heka-build/hekad
       
 - name: skydns
   plan:
@@ -239,11 +241,11 @@ jobs:
       - get: skydns-git
       - get: skydns-container-src
         trigger: true
-  - task: build-heka
-    file: heka-container-src/build.yaml
-  - put: heka-s3
+  - task: build-skydns
+    file: skydns-container-src/build.yaml
+  - put: skydns-docker
     params:
-      file: hekad
+      build: skydns-build
       
 - name: alpine-build
   serial: true
