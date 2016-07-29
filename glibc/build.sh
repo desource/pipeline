@@ -19,7 +19,7 @@ cd $SRC/build
     --without-cvs \
     --without-gd \
     --disable-profile \
-    --disable-sanity-checks \
-    --prefix=$OUT
+    --disable-sanity-checks
 make
-make install
+
+cp -r $SRC/build $OUT
