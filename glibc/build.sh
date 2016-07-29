@@ -22,4 +22,4 @@ cd $SRC/build
     --disable-sanity-checks
 make
 
-cp -r $SRC/build $OUT
+cp -r $SRC/build/* $OUT
