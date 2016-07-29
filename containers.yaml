@@ -4,7 +4,9 @@ groups:
     - haproxy
     - nginx
     - java
+    - elasticsearch
     - kibana
+    - heka
 - name: base-containers
   jobs:
     - alpine-build
@@ -40,7 +42,31 @@ resources:
   source:
     uri: https://github.com/desource/container-kibana.git
     branch: concourse
+    
+- name: elasticsearch-src
+  type: git
+  source:
+    uri: https://github.com/desource/container-elasticsearch.git
+    branch: concourse
 
+- name: heka-container-src
+  type: git
+  source:
+    uri: https://github.com/desource/container-heka.git
+    branch: concourse
+
+- name: heka-src
+  type: git
+  source:
+    uri: https://github.com/mozilla-services/heka.git
+
+- name: heka-s3
+  type: s3
+  source:
+    bucket: desource.net
+    access_key_id: {{s3-access-key}}
+    secret_access_key: {{s3-secret-key}}
+    
 - name: quay-io-desource-alpine-build
   type: docker-image
   source:
@@ -80,6 +106,13 @@ resources:
   type: docker-image
   source:
     repository: quay.io/desource/java
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: elasticsearch-docker
+  type: docker-image
+  source:
+    repository: quay.io/desource/elasticsearch
     username: {{quay-io-username}}
     password: {{quay-io-password}}
     
@@ -146,6 +179,19 @@ jobs:
     params:
       build: java-build
 
+- name: elasticsearch
+  plan:
+  - aggregate:
+      - get: java-docker
+        trigger: true
+      - get: elasticsearch-src
+        trigger: true
+  - task: build-elasticsearch
+    file: elasticsearch-src/build.yaml
+  - put: elasticsearch-docker
+    params:
+      build: elasticsearch-build
+
 - name: kibana
   plan:
   - get: kibana-src
@@ -156,6 +202,18 @@ jobs:
     params:
       build: kibana-build
 
+- name: heka
+  plan:
+  - aggregate:    
+      - get: heka-src
+      - get: heka-container-src
+        trigger: true
+  - task: build-heka
+    file: heka-container-src/build.yaml
+  - put: heka-s3
+    params:
+      file: hekad
+      
 - name: alpine-build
   serial: true
   plan:

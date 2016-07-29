@@ -5,11 +5,14 @@ RUN \
   dnf install -y \
       which \
       make \
+      cmake \
       binutils \
       gcc \
       patch \
       tar \
       xz \
       unzip \
-      findutils && \
+      git \
+      findutils \
+      golang && \
   dnf clean all
