@@ -55,10 +55,22 @@ resources:
     uri: https://github.com/desource/container-heka.git
     branch: concourse
 
-- name: heka-src
+- name: skydns-container-src
+  type: git
+  source:
+    uri: https://github.com/desource/container-skydns.git
+    branch: concourse
+
+- name: heka-git
   type: git
   source:
     uri: https://github.com/mozilla-services/heka.git
+
+- name: skydns-git
+  type: git
+  source:
+    uri: https://github.com/skynetservices/skydns.git
+    branch: 2.5.3a
 
 - name: heka-s3
   type: s3
@@ -120,6 +132,13 @@ resources:
   type: docker-image
   source:
     repository: quay.io/desource/kibana
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: skydns-docker
+  type: docker-image
+  source:
+    repository: quay.io/desource/skydns
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
@@ -205,8 +224,20 @@ jobs:
 - name: heka
   plan:
   - aggregate:    
-      - get: heka-src
+      - get: heka-git
       - get: heka-container-src
+        trigger: true
+  - task: build-heka
+    file: heka-container-src/build.yaml
+  - put: heka-s3
+    params:
+      file: hekad
+      
+- name: skydns
+  plan:
+  - aggregate:    
+      - get: skydns-git
+      - get: skydns-container-src
         trigger: true
   - task: build-heka
     file: heka-container-src/build.yaml
