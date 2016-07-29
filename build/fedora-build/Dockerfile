@@ -10,4 +10,6 @@ RUN \
       patch \
       tar \
       xz \
-      unzip
+      unzip \
+      findutils && \
+  dnf clean all

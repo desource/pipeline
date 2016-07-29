@@ -5,7 +5,7 @@ groups:
     - nginx
     - java
     - kibana
-- name: base-builds
+- name: base-containers
   jobs:
     - alpine-build
     - fedora-build
