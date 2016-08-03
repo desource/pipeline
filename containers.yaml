@@ -8,7 +8,7 @@ groups:
     - kibana
     - heka
     - skydns
-- name: base-containers
+- name: build
   jobs:
     - alpine-build
     - fedora-build
@@ -19,6 +19,11 @@ resources:
   source:
     uri: git@github.com:desource/pipeline.git
     private_key: {{github-private-key}}
+
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: {{slack-notifications-url}}
 
 - name: haproxy-src
   type: git
@@ -43,7 +48,7 @@ resources:
   source:
     uri: https://github.com/desource/container-kibana.git
     branch: concourse
-    
+
 - name: elasticsearch-src
   type: git
   source:
@@ -66,7 +71,7 @@ resources:
   source:
     uri: https://github.com/skynetservices/skydns.git
     branch: 2.5.3a
-    
+
 - name: heka-git
   type: git
   source:
@@ -79,7 +84,7 @@ resources:
     regexp: builds/heka/hekad-(.*)
     access_key_id: {{s3-access-key}}
     secret_access_key: {{s3-secret-key}}
-    
+
 - name: alpine-build-image
   type: docker-image
   source:
@@ -121,7 +126,7 @@ resources:
     repository: quay.io/desource/elasticsearch
     username: {{quay-io-username}}
     password: {{quay-io-password}}
-    
+
 - name: kibana-docker
   type: docker-image
   source:
@@ -177,6 +182,10 @@ jobs:
   - put: nginx-docker
     params:
       build: nginx-build
+  - put: slack-alert
+    params:
+      channel: '#general'
+      text_file: common/slack/message.txt
 
 - name: java
   plan:
@@ -191,6 +200,10 @@ jobs:
   - put: java-docker
     params:
       build: java-build
+  - put: slack-alert
+    params:
+      channel: '#general'
+      text_file: common/slack/message.txt
 
 - name: elasticsearch
   plan:
@@ -204,6 +217,10 @@ jobs:
   - put: elasticsearch-docker
     params:
       build: elasticsearch-build
+  - put: slack-alert
+    params:
+      channel: '#general'
+      text_file: common/slack/message.txt
 
 - name: kibana
   plan:
@@ -214,10 +231,14 @@ jobs:
   - put: kibana-docker
     params:
       build: kibana-build
+  - put: slack-alert
+    params:
+      channel: '#general'
+      text_file: common/slack/message.txt
 
 - name: heka
   plan:
-  - aggregate:    
+  - aggregate:
       - get: heka-git
       - get: heka-container-src
         trigger: true
@@ -226,10 +247,14 @@ jobs:
   - put: heka-s3
     params:
       file: heka-build/builds/heka/**
-      
+  - put: slack-alert
+    params:
+      channel: '#general'
+      text_file: common/slack/message.txt
+
 - name: skydns
   plan:
-  - aggregate:    
+  - aggregate:
       - get: skydns-git
       - get: skydns-container-src
         trigger: true
@@ -238,7 +263,11 @@ jobs:
   - put: skydns-docker
     params:
       build: skydns-build
-      
+  - put: slack-alert
+    params:
+      channel: '#general'
+      text_file: common/slack/message.txt
+
 - name: alpine-build
   serial: true
   plan:
@@ -254,3 +283,13 @@ jobs:
   - put: fedora-build-image
     params:
       build: common/build/fedora-build
+
+
+
+
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest

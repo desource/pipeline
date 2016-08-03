@@ -1,0 +1,4 @@
+The build had a result. Check it out at:
+https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+or at:
+https://ci.desource.net/builds/$BUILD_ID
