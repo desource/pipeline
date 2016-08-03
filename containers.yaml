@@ -185,7 +185,9 @@ jobs:
   - put: slack-alert
     params:
       channel: '#general'
-      text_file: common/slack/message.txt
+      username: concourse
+      icon_emoji: concourse
+      text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
 
 - name: java
   plan:
@@ -203,7 +205,9 @@ jobs:
   - put: slack-alert
     params:
       channel: '#general'
-      text_file: common/slack/message.txt
+      username: concourse
+      icon_emoji: concourse
+      text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
 
 - name: elasticsearch
   plan:
@@ -220,7 +224,9 @@ jobs:
   - put: slack-alert
     params:
       channel: '#general'
-      text_file: common/slack/message.txt
+      username: concourse
+      icon_emoji: concourse
+      text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
 
 - name: kibana
   plan:
@@ -234,7 +240,9 @@ jobs:
   - put: slack-alert
     params:
       channel: '#general'
-      text_file: common/slack/message.txt
+      username: concourse
+      icon_emoji: concourse
+      text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
 
 - name: heka
   plan:
@@ -250,7 +258,9 @@ jobs:
   - put: slack-alert
     params:
       channel: '#general'
-      text_file: common/slack/message.txt
+      username: concourse
+      icon_emoji: concourse
+      text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
 
 - name: skydns
   plan:
@@ -266,7 +276,9 @@ jobs:
   - put: slack-alert
     params:
       channel: '#general'
-      text_file: common/slack/message.txt
+      username: concourse
+      icon_emoji: concourse
+      text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
 
 - name: alpine-build
   serial: true
