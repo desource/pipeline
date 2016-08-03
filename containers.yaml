@@ -76,29 +76,21 @@ resources:
   type: s3
   source:
     bucket: desource.net
-    regexp: builds/heka/(.*)
-    versioned_file: builds/heka/versions
+    regexp: builds/heka/hekad-(.*)
     access_key_id: {{s3-access-key}}
     secret_access_key: {{s3-secret-key}}
     
-- name: quay-io-desource-alpine-build
-  type: docker-image
-  source:
-    repository: quay.io/desource/alpine-build
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: quay-io-desource-fedora-build
-  type: docker-image
-  source:
-    repository: quay.io/desource/fedora-build
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
 - name: alpine-build-image
   type: docker-image
   source:
     repository: quay.io/desource/alpine-build
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: fedora-build-image
+  type: docker-image
+  source:
+    repository: quay.io/desource/fedora-build
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
@@ -233,7 +225,7 @@ jobs:
     file: heka-container-src/build.yaml
   - put: heka-s3
     params:
-      file: heka-build/hekad
+      file: heka-build/builds/heka/**
       
 - name: skydns
   plan:
@@ -251,7 +243,7 @@ jobs:
   serial: true
   plan:
   - get: common
-  - put: quay-io-desource-alpine-build
+  - put: alpine-build-image
     params:
       build: common/build/alpine-build
 
@@ -259,6 +251,6 @@ jobs:
   serial: true
   plan:
   - get: common
-  - put: quay-io-desource-fedora-build
+  - put: fedora-build-image
     params:
       build: common/build/fedora-build
