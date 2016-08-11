@@ -12,9 +12,11 @@ groups:
   jobs:
     - alpine-build
     - fedora-build
+    - centos-base
+    - ubuntu-base
 
 resources:
-- name: common
+- name: pipeline
   type: git
   source:
     uri: git@github.com:desource/pipeline.git
@@ -99,6 +101,20 @@ resources:
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
+- name: centos-base-image
+  type: docker-image
+  source:
+    repository: quay.io/desource/centos-base
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: ubuntu-base-image
+  type: docker-image
+  source:
+    repository: quay.io/desource/ubuntu-base
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
 - name: haproxy-docker
   type: docker-image
   source:
@@ -152,16 +168,16 @@ jobs:
 - name: haproxy
   plan:
   - aggregate:
-      - get: common
+      - get: pipeline
       - get: haproxy-src
         trigger: true
   - aggregate:
       - task: build-libressl
-        file: common/libressl/build.yaml
+        file: pipeline/libressl/build.yaml
       - task: build-lua
-        file: common/lua/build.yaml
+        file: pipeline/lua/build.yaml
       - task: build-libslz
-        file: common/libslz/build.yaml
+        file: pipeline/libslz/build.yaml
   - task: build-haproxy
     file: haproxy-src/build.yaml
   - put: haproxy-docker
@@ -171,12 +187,12 @@ jobs:
 - name: nginx
   plan:
   - aggregate:
-      - get: common
+      - get: pipeline
       - get: nginx-src
         trigger: true
   - aggregate:
       - task: build-libressl
-        file: common/libressl/build.yaml
+        file: pipeline/libressl/build.yaml
   - task: build-nginx
     file: nginx-src/build.yaml
   - put: nginx-docker
@@ -192,11 +208,11 @@ jobs:
 - name: java
   plan:
   - aggregate:
-      - get: common
+      - get: pipeline
       - get: java-src
         trigger: true
   - task: build-glibc
-    file: common/glibc/build.yaml
+    file: pipeline/glibc/build.yaml
   - task: build-java
     file: java-src/build.yaml
   - put: java-docker
@@ -283,21 +299,34 @@ jobs:
 - name: alpine-build
   serial: true
   plan:
-  - get: common
+  - get: pipeline
   - put: alpine-build-image
     params:
-      build: common/build/alpine-build
+      build: pipeline/build/alpine-build
 
 - name: fedora-build
   serial: true
   plan:
-  - get: common
+  - get: pipeline
   - put: fedora-build-image
     params:
-      build: common/build/fedora-build
-
-
-
+      build: pipeline/build/fedora-build
+      
+- name: centos-base
+  serial: true
+  plan:
+  - get: pipeline
+  - put: centos-base-image
+    params:
+      build: pipeline/build/centos-base
+      
+- name: ubuntu-base
+  serial: true
+  plan:
+  - get: pipeline
+  - put: ubuntu-base-image
+    params:
+      build: pipeline/build/ubuntu-base
 
 resource_types:
 - name: slack-notification
