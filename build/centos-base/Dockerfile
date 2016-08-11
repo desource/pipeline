@@ -1,4 +1,4 @@
-FROM centos:centos7
+FROM centos:7.2.1511
 
 ADD dbus.service /etc/systemd/system/dbus.service
 
