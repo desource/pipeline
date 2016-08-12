@@ -8,12 +8,14 @@ groups:
     - kibana
     - heka
     - skydns
+    - dockyard
 - name: build
   jobs:
     - alpine-build
     - fedora-build
     - centos-base
     - ubuntu-base
+    - ubuntu-xenial
 
 resources:
 - name: pipeline
@@ -74,6 +76,17 @@ resources:
     uri: https://github.com/skynetservices/skydns.git
     branch: 2.5.3a
 
+- name: dockyard-container-src
+  type: git
+  source:
+    uri: https://github.com/desource/container-dockyard.git
+
+- name: dockyard-git
+  type: git
+  source:
+    uri: https://github.com/containerops/dockyard.git
+    branch: master
+
 - name: heka-git
   type: git
   source:
@@ -112,6 +125,13 @@ resources:
   type: docker-image
   source:
     repository: quay.io/desource/ubuntu-base
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: ubuntu-xenial-image
+  type: docker-image
+  source:
+    repository: quay.io/desource/ubuntu-xenial
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
@@ -154,6 +174,13 @@ resources:
   type: docker-image
   source:
     repository: quay.io/desource/skydns
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: dockyard-docker
+  type: docker-image
+  source:
+    repository: quay.io/desource/dockyard
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
@@ -296,6 +323,24 @@ jobs:
       icon_emoji: concourse
       text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
 
+- name: dockyard
+  plan:
+  - aggregate:
+      - get: dockyard-git
+      - get: dockyard-container-src
+        trigger: true
+  - task: build-skydns
+    file: dockyard-container-src/build.yaml
+  - put: dockyard-docker
+    params:
+      build: dockyard-build
+  - put: slack-alert
+    params:
+      channel: '#general'
+      username: concourse
+      icon_emoji: concourse
+      text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+
 - name: alpine-build
   serial: true
   plan:
@@ -327,10 +372,17 @@ jobs:
   - put: ubuntu-base-image
     params:
       build: pipeline/build/ubuntu-base
+      
+- name: ubuntu-xenial
+  serial: true
+  plan:
+  - get: pipeline
+  - put: ubuntu-xenial-image
+    params:
+      build: pipeline/build/ubuntu-xenial
 
 resource_types:
 - name: slack-notification
   type: docker-image
   source:
     repository: cfcommunity/slack-notification-resource
-    tag: latest
