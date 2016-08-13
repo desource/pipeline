@@ -11,7 +11,8 @@ RUN \
   systemctl mask \
     dev-hugepages.mount \
     dev-mqueue.mount \
-    display-manager.service graphical.target \
+    display-manager.service \
+    graphical.target \
     sys-fs-fuse-connections.mount \
     sys-kernel-config.mount \
     sys-kernel-debug.mount \

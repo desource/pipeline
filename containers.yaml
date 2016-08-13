@@ -8,14 +8,15 @@ groups:
     - kibana
     - heka
     - skydns
-    - dockyard
+- name: base
+  jobs:    
+    - centos-7
+    - ubuntu-trusty
+    - ubuntu-xenial
 - name: build
   jobs:
     - alpine-build
     - fedora-build
-    - centos-base
-    - ubuntu-base
-    - ubuntu-xenial
 
 resources:
 - name: pipeline
@@ -76,17 +77,6 @@ resources:
     uri: https://github.com/skynetservices/skydns.git
     branch: 2.5.3a
 
-- name: dockyard-container-src
-  type: git
-  source:
-    uri: https://github.com/desource/container-dockyard.git
-
-- name: dockyard-git
-  type: git
-  source:
-    uri: https://github.com/containerops/dockyard.git
-    branch: master
-
 - name: heka-git
   type: git
   source:
@@ -114,17 +104,17 @@ resources:
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: centos-base-image
+- name: centos-7-image
   type: docker-image
   source:
-    repository: quay.io/desource/centos-base
+    repository: quay.io/desource/centos-7
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: ubuntu-base-image
+- name: ubuntu-trusty-image
   type: docker-image
   source:
-    repository: quay.io/desource/ubuntu-base
+    repository: quay.io/desource/ubuntu-trusty
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
@@ -174,13 +164,6 @@ resources:
   type: docker-image
   source:
     repository: quay.io/desource/skydns
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: dockyard-docker
-  type: docker-image
-  source:
-    repository: quay.io/desource/dockyard
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
@@ -323,23 +306,6 @@ jobs:
       icon_emoji: concourse
       text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
 
-- name: dockyard
-  plan:
-  - aggregate:
-      - get: dockyard-git
-      - get: dockyard-container-src
-        trigger: true
-  - task: build-skydns
-    file: dockyard-container-src/build.yaml
-  - put: dockyard-docker
-    params:
-      build: dockyard-build
-  - put: slack-alert
-    params:
-      channel: '#general'
-      username: concourse
-      icon_emoji: concourse
-      text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
 
 - name: alpine-build
   serial: true
@@ -357,21 +323,21 @@ jobs:
     params:
       build: pipeline/build/fedora-build
       
-- name: centos-base
+- name: centos-7
   serial: true
   plan:
   - get: pipeline
-  - put: centos-base-image
+  - put: centos-7-image
     params:
-      build: pipeline/build/centos-base
+      build: pipeline/base/centos-7
       
-- name: ubuntu-base
+- name: ubuntu-trusty
   serial: true
   plan:
   - get: pipeline
-  - put: ubuntu-base-image
+  - put: ubuntu-trusty-image
     params:
-      build: pipeline/build/ubuntu-base
+      build: pipeline/base/ubuntu-trusty
       
 - name: ubuntu-xenial
   serial: true
@@ -379,7 +345,7 @@ jobs:
   - get: pipeline
   - put: ubuntu-xenial-image
     params:
-      build: pipeline/build/ubuntu-xenial
+      build: pipeline/base/ubuntu-xenial
 
 resource_types:
 - name: slack-notification
