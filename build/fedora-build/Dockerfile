@@ -14,5 +14,6 @@ RUN \
       unzip \
       git \
       findutils \
+      pkgconfig \
       golang && \
   dnf clean all
