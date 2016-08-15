@@ -45,6 +45,11 @@ resources:
   source:
     uri: https://github.com/desource/libressl.git
 
+- name: glibc-src
+  type: git
+  source:
+    uri: https://github.com/desource/glibc.git
+
 - name: java-src
   type: git
   source:
@@ -211,7 +216,6 @@ jobs:
 - name: nginx
   plan:
   - aggregate:
-      - get: pipeline
       - get: src
         resource: nginx-src
         trigger: true
@@ -235,11 +239,12 @@ jobs:
 - name: java
   plan:
   - aggregate:
-      - get: pipeline
       - get: java-src
         trigger: true
+      - get: glibc-src
+        trigger: true
   - task: glibc
-    file: pipeline/glibc/build.yaml
+    file: glibc-src/build.yaml
   - task: java
     file: java-src/build.yaml
   - put: java-docker
@@ -318,6 +323,10 @@ jobs:
         trigger: true
       - get: heka-container-src
         trigger: true
+      - get: glibc-src
+        trigger: true
+  - task: glibc
+    file: glibc-src/build.yaml
   - task: heka
     file: heka-container-src/build.yaml
   - put: heka-docker
@@ -347,7 +356,6 @@ jobs:
       username: concourse
       icon_emoji: concourse
       text: build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-
 
 - name: alpine-build
   serial: true
