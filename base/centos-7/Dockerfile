@@ -4,7 +4,7 @@ ADD dbus.service /etc/systemd/system/dbus.service
 
 RUN \
   yum -y update && \
-  yum -y swap -- install systemd systemd-libs dbus && \
+  yum -y install systemd systemd-libs dbus && \
   yum clean all && \
   systemctl mask \
     dev-hugepages.mount \

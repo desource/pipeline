@@ -18,6 +18,302 @@ groups:
   jobs:
     - alpine-build
     - fedora-build
+    
+jobs:
+- name: haproxy
+  plan:
+  - do:
+    - aggregate:
+      - get: pipeline
+      - get: src
+        resource: haproxy-src
+        trigger: true
+      - get: libressl-src
+        trigger: true
+    - aggregate:
+      - task: libressl
+        file: libressl-src/build.yaml
+      - task: lua
+        file: pipeline/lua/build.yaml
+      - task: libslz
+        file: pipeline/libslz/build.yaml
+    - task: haproxy
+      file: src/build.yaml
+    - put: docker-haproxy
+      params:
+        build: out
+    on_failure:
+      put: slack
+      params:
+        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+
+- name: nginx
+  plan:
+  - do:
+    - aggregate:
+      - get: src
+        resource: nginx-src
+        trigger: true
+      - get: libressl-src
+        trigger: true
+    - aggregate:
+        - task: libressl
+          file: libressl-src/build.yaml
+    - task: nginx
+      file: src/build.yaml
+    - put: nginx-docker
+      params:
+        build: out
+    on_failure:
+      put: slack
+      params:
+        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+
+- name: java
+  plan:
+  - do:
+    - aggregate:
+      - get: java-src
+        trigger: true
+      - get: glibc-src
+        trigger: true
+    - task: glibc
+      file: glibc-src/build.yaml
+    - task: java
+      file: java-src/build.yaml
+    - put: java-docker
+      params:
+        build: out
+    on_failure:
+      put: slack
+      params:
+        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+
+- name: elasticsearch
+  plan:
+  - do:
+    - aggregate:
+        - get: java-docker
+          passed: [java]
+          trigger: true
+        - get: elasticsearch-src
+          trigger: true
+    - task: elasticsearch
+      file: elasticsearch-src/build.yaml
+    - put: elasticsearch-docker
+      params:
+        build: out
+    on_failure:
+      put: slack
+      params:
+        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+
+- name: nodejs
+  plan:
+  - do:
+    - get: src
+      resource: nodejs-src
+      trigger: true
+    - task: nodejs
+      file: src/build.yaml
+    - put: nodejs-docker
+      params:
+        build: out
+    on_failure:
+      put: slack
+      params:
+        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+
+- name: kibana
+  plan:
+  - do:
+    - aggregate:
+      - get: nodejs-docker
+        passed: [nodejs]
+        trigger: true
+      - get: src
+        resource: kibana-src
+        trigger: true
+    - task: kibana
+      file: src/build.yaml
+    - put: kibana-docker
+      params:
+        build: out
+    on_failure:
+      put: slack
+      params:
+        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+
+- name: heka
+  plan:
+  - do:
+    - aggregate:
+      - get: src
+        resource: heka-git
+        trigger: true
+      - get: heka-container-src
+        trigger: true
+    - task: heka
+      file: heka-container-src/build.yaml
+    - put: heka-docker
+      params:
+        build: out
+    on_failure:
+      put: slack
+      params:
+        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        icon_emoji: ":concourse:"
+
+- name: skydns
+  plan:
+  - do:
+    - aggregate:
+      - get: skydns-git
+      - get: skydns-container-src
+        trigger: true
+    - task: skydns
+      file: skydns-container-src/build.yaml
+    - put: skydns-docker
+      params:
+        build: skydns-build
+    on_failure:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":monkey_face: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+
+- name: alpine-build
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-alpine-build
+    params:
+      build: pipeline/build/alpine
+
+- name: fedora-build
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-fedora-build
+    params:
+      build: pipeline/build/fedora
+
+- name: centos-7
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-centos-7
+    params:
+      build: pipeline/base/centos-7
+
+- name: ubuntu-trusty
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-ubuntu-trusty
+    params:
+      build: pipeline/base/ubuntu-trusty
+
+- name: ubuntu-xenial
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-ubuntu-xenial
+    params:
+      build: pipeline/base/ubuntu-xenial
 
 resources:
 - name: pipeline
@@ -25,20 +321,10 @@ resources:
   source:
     uri: https://github.com/desource/pipeline.git
 
-- name: notification
-  type: notification
+- name: slack
+  type: slack-notification
   source:
     url: {{slack-notifications-url}}
-
-- name: haproxy-src
-  type: git
-  source:
-    uri: https://github.com/desource/container-haproxy.git
-
-- name: nginx-src
-  type: git
-  source:
-    uri: https://github.com/desource/container-nginx.git
 
 - name: libressl-src
   type: git
@@ -49,6 +335,23 @@ resources:
   type: git
   source:
     uri: https://github.com/desource/glibc.git
+
+- name: haproxy-src
+  type: git
+  source:
+    uri: https://github.com/desource/container-haproxy.git
+    
+- name: docker-haproxy
+  type: docker-image
+  source:
+    repository: quay.io/desource/haproxy
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: nginx-src
+  type: git
+  source:
+    uri: https://github.com/desource/container-nginx.git
 
 - name: java-src
   type: git
@@ -92,48 +395,7 @@ resources:
   type: git
   source:
     uri: https://github.com/desource/container-skydns.git
-
-- name: alpine-build-image
-  type: docker-image
-  source:
-    repository: quay.io/desource/alpine-build
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: fedora-build-image
-  type: docker-image
-  source:
-    repository: quay.io/desource/fedora-build
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: centos-7-image
-  type: docker-image
-  source:
-    repository: quay.io/desource/centos-7
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: ubuntu-trusty-image
-  type: docker-image
-  source:
-    repository: quay.io/desource/ubuntu-trusty
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: ubuntu-xenial-image
-  type: docker-image
-  source:
-    repository: quay.io/desource/ubuntu-xenial
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: haproxy-docker
-  type: docker-image
-  source:
-    repository: quay.io/desource/haproxy
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
+    tag: next
 
 - name: nginx-docker
   type: docker-image
@@ -184,304 +446,49 @@ resources:
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-jobs:
-- name: haproxy
-  plan:
-  - do:
-    - aggregate:
-      - get: pipeline
-      - get: src
-        resource: haproxy-src
-        trigger: true
-      - get: libressl-src
-        trigger: true
-    - aggregate:
-      - task: libressl
-        file: libressl-src/build.yaml
-      - task: lua
-        file: pipeline/lua/build.yaml
-      - task: libslz
-        file: pipeline/libslz/build.yaml
-    - task: haproxy
-      file: src/build.yaml
-    - put: haproxy-docker
-      params:
-        build: out
-    on_failure:
-      put: notification
-      params:
-        text: Failed to build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: notification
-      params:
-        text: Built https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
 
-- name: nginx
-  plan:
-  - do:
-    - aggregate:
-      - get: src
-        resource: nginx-src
-        trigger: true
-      - get: libressl-src
-        trigger: true
-    - aggregate:
-        - task: libressl
-          file: libressl-src/build.yaml
-    - task: nginx
-      file: src/build.yaml
-    - put: nginx-docker
-      params:
-        build: out
-    on_failure:
-      put: notification
-      params:
-        text: Failed to build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: notification
-      params:
-        text: Built https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
+- name: docker-alpine-build
+  type: docker-image
+  source:
+    repository: quay.io/desource/alpine
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: build
 
-- name: java
-  plan:
-  - do:
-    - aggregate:
-      - get: java-src
-        trigger: true
-      - get: glibc-src
-        trigger: true
-    - task: glibc
-      file: glibc-src/build.yaml
-    - task: java
-      file: java-src/build.yaml
-    - put: java-docker
-      params:
-        build: out
-    on_failure:
-      put: notification
-      params:
-        text: Failed to build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: notification
-      params:
-        text: Built https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
+- name: docker-fedora-build
+  type: docker-image
+  source:
+    repository: quay.io/desource/fedora
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: build
 
-- name: elasticsearch
-  plan:
-  - do:
-    - aggregate:
-        - get: java-docker
-          passed: [java]
-          trigger: true
-        - get: elasticsearch-src
-          trigger: true
-    - task: elasticsearch
-      file: elasticsearch-src/build.yaml
-    - put: elasticsearch-docker
-      params:
-        build: out
-    on_failure:
-      put: notification
-      params:
-        text: Failed to build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: notification
-      params:
-        text: Built https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
+- name: docker-centos-7
+  type: docker-image
+  source:
+    repository: quay.io/desource/centos
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: 7
 
-- name: nodejs
-  plan:
-  - do:
-    - get: src
-      resource: nodejs-src
-      trigger: true
-    - task: nodejs
-      file: src/build.yaml
-    - put: nodejs-docker
-      params:
-        build: out
-    on_failure:
-      put: notification
-      params:
-        text: Failed to build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: notification
-      params:
-        text: Built https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
+- name: docker-ubuntu-trusty
+  type: docker-image
+  source:
+    repository: quay.io/desource/ubuntu
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: trusty
 
-- name: kibana
-  plan:
-  - do:
-    - aggregate:
-      - get: nodejs-docker
-        passed: [nodejs]
-        trigger: true
-      - get: src
-        resource: kibana-src
-        trigger: true
-    - task: kibana
-      file: src/build.yaml
-    - put: kibana-docker
-      params:
-        build: out
-    on_failure:
-      put: notification
-      params:
-        text: Failed to build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: notification
-      params:
-        text: Built https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-
-- name: heka
-  plan:
-  - do:
-    - aggregate:
-      - get: src
-        resource: heka-git
-        trigger: true
-      - get: heka-container-src
-        trigger: true
-    - task: heka
-      file: heka-container-src/build.yaml
-    - put: heka-docker
-      params:
-        build: out
-    on_failure:
-      put: notification
-      params:
-        text: Failed to build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: notification
-      params:
-        text: Built https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        icon_emoji: ":concourse:"
-
-- name: skydns
-  plan:
-  - do:
-    - aggregate:
-      - get: skydns-git
-      - get: skydns-container-src
-        trigger: true
-    - task: skydns
-      file: skydns-container-src/build.yaml
-    - put: skydns-docker
-      params:
-        build: skydns-build
-    on_failure:
-      put: notification
-      params:
-        text: Failed to build https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: notification
-      params:
-        text: Built https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-
-- name: alpine-build
-  serial: true
-  plan:
-  - get: pipeline
-  - put: alpine-build-image
-    params:
-      build: pipeline/build/alpine-build
-
-- name: fedora-build
-  serial: true
-  plan:
-  - get: pipeline
-  - put: fedora-build-image
-    params:
-      build: pipeline/build/fedora-build
-
-- name: centos-7
-  serial: true
-  plan:
-  - get: pipeline
-  - put: centos-7-image
-    params:
-      build: pipeline/base/centos-7
-
-- name: ubuntu-trusty
-  serial: true
-  plan:
-  - get: pipeline
-  - put: ubuntu-trusty-image
-    params:
-      build: pipeline/base/ubuntu-trusty
-
-- name: ubuntu-xenial
-  serial: true
-  plan:
-  - get: pipeline
-  - put: ubuntu-xenial-image
-    params:
-      build: pipeline/base/ubuntu-xenial
-
+- name: docker-ubuntu-xenial
+  type: docker-image
+  source:
+    repository: quay.io/desource/ubuntu
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: xenial
+    
 resource_types:
-- name: notification
+- name: slack-notification
   type: docker-image
   source:
     repository: cfcommunity/slack-notification-resource
