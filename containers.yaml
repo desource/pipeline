@@ -73,7 +73,7 @@ jobs:
           file: libressl-src/build.yaml
     - task: nginx
       file: src/build.yaml
-    - put: nginx-docker
+    - put: docker-nginx
       params:
         build: out
     on_failure:
@@ -105,7 +105,7 @@ jobs:
       file: glibc-src/build.yaml
     - task: java
       file: java-src/build.yaml
-    - put: java-docker
+    - put: docker-java
       params:
         build: out
     on_failure:
@@ -129,14 +129,14 @@ jobs:
   plan:
   - do:
     - aggregate:
-        - get: java-docker
+        - get: docker-java
           passed: [java]
           trigger: true
         - get: elasticsearch-src
           trigger: true
     - task: elasticsearch
       file: elasticsearch-src/build.yaml
-    - put: elasticsearch-docker
+    - put: docker-elasticsearch
       params:
         build: out
     on_failure:
@@ -164,7 +164,7 @@ jobs:
       trigger: true
     - task: nodejs
       file: src/build.yaml
-    - put: nodejs-docker
+    - put: docker-nodejs
       params:
         build: out
     on_failure:
@@ -188,7 +188,7 @@ jobs:
   plan:
   - do:
     - aggregate:
-      - get: nodejs-docker
+      - get: docker-nodejs
         passed: [nodejs]
         trigger: true
       - get: src
@@ -196,7 +196,7 @@ jobs:
         trigger: true
     - task: kibana
       file: src/build.yaml
-    - put: kibana-docker
+    - put: docker-kibana
       params:
         build: out
     on_failure:
@@ -227,7 +227,7 @@ jobs:
         trigger: true
     - task: heka
       file: heka-container-src/build.yaml
-    - put: heka-docker
+    - put: docker-heka
       params:
         build: out
     on_failure:
@@ -255,7 +255,7 @@ jobs:
         trigger: true
     - task: skydns
       file: skydns-container-src/build.yaml
-    - put: skydns-docker
+    - put: docker-skydns
       params:
         build: skydns-build
     on_failure:
@@ -397,49 +397,49 @@ resources:
     uri: https://github.com/desource/container-skydns.git
     tag: next
 
-- name: nginx-docker
+- name: docker-nginx
   type: docker-image
   source:
     repository: quay.io/desource/nginx
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: java-docker
+- name: docker-java
   type: docker-image
   source:
     repository: quay.io/desource/java
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: elasticsearch-docker
+- name: docker-elasticsearch
   type: docker-image
   source:
     repository: quay.io/desource/elasticsearch
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: nodejs-docker
+- name: docker-nodejs
   type: docker-image
   source:
     repository: quay.io/desource/nodejs
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: kibana-docker
+- name: docker-kibana
   type: docker-image
   source:
     repository: quay.io/desource/kibana
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: skydns-docker
+- name: docker-skydns
   type: docker-image
   source:
     repository: quay.io/desource/skydns
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: heka-docker
+- name: docker-heka
   type: docker-image
   source:
     repository: quay.io/desource/heka
