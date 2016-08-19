@@ -97,14 +97,15 @@ jobs:
   plan:
   - do:
     - aggregate:
-      - get: java-src
-        trigger: true
       - get: glibc-src
+        trigger: true
+      - get: src
+        resource: java-src
         trigger: true
     - task: glibc
       file: glibc-src/build.yaml
     - task: java
-      file: java-src/build.yaml
+      file: src/build.yaml
     - put: docker-java
       params:
         build: out
@@ -129,13 +130,14 @@ jobs:
   plan:
   - do:
     - aggregate:
+        - get: src
+          resource: elasticsearch-src
+          trigger: true
         - get: docker-java
           passed: [java]
           trigger: true
-        - get: elasticsearch-src
-          trigger: true
     - task: elasticsearch
-      file: elasticsearch-src/build.yaml
+      file: src/build.yaml
     - put: docker-elasticsearch
       params:
         build: out
