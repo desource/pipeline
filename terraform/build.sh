@@ -6,7 +6,7 @@ out=$PWD/out
 export GOPATH=$PWD/go
 export PATH=$GOPATH/bin:$PATH
 
-mkdir -p $out/bin
+mkdir -p $out/bin $out/tmp
 
 cd $GOPATH/src/github.com/hashicorp/terraform
 
@@ -18,6 +18,11 @@ cat <<EOF > $out/Dockerfile
 FROM scratch
 
 ADD bin/terraform /bin/terraform
+ADD tmp           /tmp
+
+ENV PATH /bin
+
+VOLUME ["/terraform"]
 
 ENTRYPOINT [ "/bin/terraform" ]
 
