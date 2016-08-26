@@ -15,12 +15,12 @@ make bin XC_OS="linux" XC_ARCH="amd64"
 cp pkg/linux_amd64/terraform $out/bin
 
 cat <<EOF > $out/Dockerfile
-FROM scratch
+FROM alpine:3.4
+
+RUN apk --no-cache add git
 
 ADD bin/terraform /bin/terraform
 ADD tmp           /tmp
-
-ENV PATH /bin
 
 VOLUME ["/terraform"]
 
