@@ -1,0 +1,9 @@
+#!/bin/sh
+set -euo pipefail
+
+terraform=/opt/bin/terraform
+
+
+
+
+$terraform "$@"

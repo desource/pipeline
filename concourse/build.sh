@@ -18,7 +18,7 @@ curl -o bin/concourse -L "https://github.com/concourse/concourse/releases/downlo
 echo "${sha256}  bin/concourse" | sha256sum -c
 chmod +x bin/concourse
 
-echo 'hosts: files mdns4_minimal dns [NOTFOUND=return] mdns4' >> $ROOTFS/etc/nsswitch.conf
+echo 'hosts: files mdns4_minimal dns [NOTFOUND=return] mdns4' >> $rootfs/etc/nsswitch.conf
 
 cat <<EOF > etc/passwd
 root:x:0:0:root:/:/dev/null
@@ -30,9 +30,10 @@ root:x:0:
 nogroup:x:65534:
 EOF
 
+cd $rootfs
 tar -cf $out/rootfs.tar .
 
-cat <<EOF $out/Dockerfile
+cat <<EOF > $out/Dockerfile
 FROM scratch
 
 ADD rootfs.tar /

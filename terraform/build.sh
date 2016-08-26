@@ -10,20 +10,19 @@ mkdir -p $out/bin $out/tmp
 
 cd $GOPATH/src/github.com/hashicorp/terraform
 
-make bin XC_OS="linux" XC_ARCH="amd64"
+make bin XC_OS="linux darwin" XC_ARCH="amd64"
 
-cp pkg/linux_amd64/terraform $out/bin
+cp -r pkg $out/pkg
 
 cat <<EOF > $out/Dockerfile
 FROM alpine:3.4
 
 RUN apk --no-cache add git
 
-ADD bin/terraform /bin/terraform
-ADD tmp           /tmp
+ADD pkg/linux_amd64/terraform /bin/terraform
 
 VOLUME ["/terraform"]
 
-ENTRYPOINT [ "/bin/terraform" ]
+ENTRYPOINT ["/bin/terraform"]
 
 EOF

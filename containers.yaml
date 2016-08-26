@@ -284,8 +284,7 @@ jobs:
     - aggregate:
       - get: glibc-src
         trigger: true
-      - get: src
-        resource: pipeline
+      - get: pipeline
     - task: glibc
       file: glibc-src/build.yaml
     - task: concourse
