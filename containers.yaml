@@ -9,6 +9,7 @@ groups:
     - kibana
     - heka
     - skydns
+    - concourse
 - name: base
   jobs:
     - centos-7
@@ -277,6 +278,39 @@ jobs:
         always_notify: true
         icon_emoji: ":concourse:"
 
+- name: concourse
+  plan:
+  - do:
+    - aggregate:
+      - get: glibc-src
+        trigger: true
+      - get: src
+        resource: pipeline
+    - task: glibc
+      file: glibc-src/build.yaml
+    - task: concourse
+      file: pipeline/concourse/build.yaml
+    - put: docker-concourse
+      params:
+        build: out
+    on_failure:
+      put: slack
+      params:
+        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+        
+        
 - name: alpine-build
   serial: true
   plan:
@@ -448,6 +482,12 @@ resources:
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
+- name: docker-concourse
+  type: docker-image
+  source:
+    repository: quay.io/desource/concourse
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}    
 
 - name: docker-alpine-build
   type: docker-image
