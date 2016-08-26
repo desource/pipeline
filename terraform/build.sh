@@ -10,9 +10,9 @@ mkdir -p $out/bin
 
 cd $GOPATH/src/github.com/hashicorp/terraform
 
-make bin #XC_OS="linux darwin" XC_ARCH="amd64" make bin
+make bin XC_OS="linux" XC_ARCH="amd64"
 
-cp bin/terraform $out/bin
+cp pkg/linux_amd64/terraform $out/bin
 
 cat <<EOF > $out/Dockerfile
 FROM scratch
