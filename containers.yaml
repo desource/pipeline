@@ -1,5 +1,5 @@
 groups:
-- name: containers
+- name: common
   jobs:
   - haproxy
   - nginx
@@ -28,14 +28,13 @@ jobs:
         trigger: true
       - get: libressl-src
         trigger: true
-      - get: libslz
-        resource: libslz-src
+      - get: libslz-src
         trigger: true
     - aggregate:
       - task: libressl
         file: libressl-src/build.yaml
       - task: libslz
-        file: libslz/build.yaml
+        file: libslz-src/build.yaml
       - task: lua
         file: pipeline/lua/build.yaml
     - task: haproxy
