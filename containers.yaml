@@ -279,9 +279,11 @@ jobs:
   plan:
   - do:
     - aggregate:
+      - get: container
+        resource: container-concourse
+        trigger: true
       - get: glibc-src
         trigger: true
-      - get: pipeline
     - task: glibc
       file: glibc-src/build.yaml
     - task: concourse
@@ -405,6 +407,12 @@ resources:
   source:
     uri: https://github.com/desource/container-skydns.git
     tag: next
+
+
+- name: container-concourse
+  type: git
+  source:
+    uri: https://github.com/desource/container-concourse.git
 
 - name: docker-nginx
   type: docker-image
