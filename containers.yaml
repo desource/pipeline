@@ -22,23 +22,25 @@ jobs:
   plan:
   - do:
     - aggregate:
-      - get: pipeline
-      - get: src
-        resource: haproxy-src
+      - get: container
+        resource: container-haproxy
         trigger: true
-      - get: libressl-src
+      - get: libressl-ci
+        resource: libressl-src
         trigger: true
-      - get: libslz-src
+      - get: libslz-ci
+        trigger: true
+      - get: liblua-ci
         trigger: true
     - aggregate:
       - task: libressl
-        file: libressl-src/build.yaml
+        file: libressl-ci/build.yaml
       - task: libslz
-        file: libslz-src/build.yaml
-      - task: lua
-        file: pipeline/lua/build.yaml
+        file: libslz-ci/build.yaml
+      - task: liblua
+        file: liblua-ci/build.yaml
     - task: haproxy
-      file: src/build.yaml
+      file: container/build.yaml
     - put: docker-haproxy
       params:
         build: out
@@ -344,17 +346,22 @@ resources:
   source:
     uri: https://github.com/desource/libressl.git
     
-- name: libslz-src
+- name: libslz-ci
   type: git
   source:
     uri: https://github.com/desource/libslz.git
+    
+- name: liblua-ci
+  type: git
+  source:
+    uri: https://github.com/desource/liblua.git
     
 - name: glibc-src
   type: git
   source:
     uri: https://github.com/desource/glibc.git
 
-- name: haproxy-src
+- name: container-haproxy
   type: git
   source:
     uri: https://github.com/desource/container-haproxy.git
