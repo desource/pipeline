@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Download and create a rootfs for concourse container
-set -eux
+set -euo pipefail
 
 declare -r version=1.6.0
 declare -r sha256=07cd9fc6fbebdc0ae64f227f4844f1dc83b2bff631fb2b024b8f8dcff0099e99
@@ -61,8 +61,7 @@ FROM scratch
 ADD {rootfs}.tar /
 
 ENV \
-  PATH /bin \
-  LANG=C.UTF-8 \
+  PATH=/bin \
   LD_LIBRARY_PATH=/lib
 
 ENTRYPOINT [ "/bin/concourse" ]

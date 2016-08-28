@@ -1,0 +1,72 @@
+groups:
+- name: base
+  jobs:
+  - centos-7
+  - ubuntu-trusty
+  - ubuntu-xenial
+    
+jobs:
+- name: centos-7
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-centos-7
+    params:
+      build: pipeline/base/centos-7
+
+- name: ubuntu-trusty
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-ubuntu-trusty
+    params:
+      build: pipeline/base/ubuntu-trusty
+
+- name: ubuntu-xenial
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-ubuntu-xenial
+    params:
+      build: pipeline/base/ubuntu-xenial
+
+resources:
+- name: pipeline
+  type: git
+  source:
+    uri: https://github.com/desource/pipeline.git
+
+- name: slack
+  type: slack-notification
+  source:
+    url: {{slack-notifications-url}}
+    
+- name: docker-centos-7
+  type: docker-image
+  source:
+    repository: quay.io/desource/centos
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: 7
+
+- name: docker-ubuntu-trusty
+  type: docker-image
+  source:
+    repository: quay.io/desource/ubuntu
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: trusty
+
+- name: docker-ubuntu-xenial
+  type: docker-image
+  source:
+    repository: quay.io/desource/ubuntu
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: xenial
+    
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
