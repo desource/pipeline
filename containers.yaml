@@ -28,13 +28,16 @@ jobs:
         trigger: true
       - get: libressl-src
         trigger: true
+      - get: libslz
+        resource: libslz-src
+        trigger: true
     - aggregate:
       - task: libressl
         file: libressl-src/build.yaml
+      - task: libslz
+        file: libslz/build.yaml
       - task: lua
         file: pipeline/lua/build.yaml
-      - task: libslz
-        file: pipeline/libslz/build.yaml
     - task: haproxy
       file: src/build.yaml
     - put: docker-haproxy
@@ -287,7 +290,7 @@ jobs:
     - task: glibc
       file: glibc-src/build.yaml
     - task: concourse
-      file: pipeline/concourse/build.yaml
+      file: container/build.yaml
     - put: docker-concourse
       params:
         build: out
@@ -341,7 +344,12 @@ resources:
   type: git
   source:
     uri: https://github.com/desource/libressl.git
-
+    
+- name: libslz-src
+  type: git
+  source:
+    uri: https://github.com/desource/libslz.git
+    
 - name: glibc-src
   type: git
   source:
