@@ -292,6 +292,7 @@ jobs:
     - put: docker-concourse
       params:
         build: out
+        tag: version
     on_failure:
       put: slack
       params:

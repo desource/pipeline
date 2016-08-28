@@ -1,46 +1,76 @@
 #!/bin/sh
+#
+# Download and create a rootfs for concourse container
 set -eux
 
-version=1.6.0
-sha256=07cd9fc6fbebdc0ae64f227f4844f1dc83b2bff631fb2b024b8f8dcff0099e99
+declare -r version=1.6.0
+declare -r sha256=07cd9fc6fbebdc0ae64f227f4844f1dc83b2bff631fb2b024b8f8dcff0099e99
 
-src=$PWD/src
-glibc=$PWD/glibc
+declare -r src=${PWD}/src
+declare -r glibc=${PWD}/glibc
+declare -r out=${PWD}/out
+declare -r rootfs=${PWD}/rootfs
 
-out=$PWD/out
-rootfs=$PWD/rootfs
+mkdirs() {
+  mkdir -p ${rootfs}/bin ${rootfs}/etc ${rootfs}/lib64 ${out}
+}
 
-mkdir -p $rootfs/bin $rootfs/etc $rootfs/lib64 $out
+download() {
+  cd ${rootfs}
 
-cd $rootfs
+  curl -L "https://github.com/concourse/concourse/releases/download/v${version}/concourse_linux_amd64" \
+       -o bin/concourse
+  echo "${sha256}  bin/concourse" | sha256sum -c
+  chmod +x bin/concourse
+}
 
-curl -o bin/concourse -L "https://github.com/concourse/concourse/releases/download/v${version}/concourse_linux_amd64"
-echo "${sha256}  bin/concourse" | sha256sum -c
-chmod +x bin/concourse
+build_rootfs() {
 
-echo 'hosts: files mdns4_minimal dns [NOTFOUND=return] mdns4' >> $rootfs/etc/nsswitch.conf
+  cp ${glibc}/libc.so.* ${glibc}/nptl/libpthread.so.* ${glibc}/elf/ld-linux-x86-64.so.* ${rootfs}/lib64
 
-cat <<EOF > etc/passwd
+  ln -s /lib64 ${rootfs}/lib
+
+  mkdir -p ${rootfs}/etc/ssl/certs
+  cp /etc/pki/tls/certs/ca-bundle.crt ${rootfs}/etc/ssl/certs/ca-certificates.crt
+
+  cat <<EOF > ${rootfs}/etc/nsswitch.conf
+hosts: files mdns4_minimal dns [NOTFOUND=return] mdns4
+EOF
+
+  cat <<EOF > ${rootfs}/etc/passwd
 root:x:0:0:root:/:/dev/null
 nobody:x:65534:65534:nogroup:/:/dev/null
 EOF
 
-cat <<EOF > etc/group
+  cat <<EOF > ${rootfs}/etc/group
 root:x:0:
 nogroup:x:65534:
 EOF
 
-cd $rootfs
-tar -cf $out/rootfs.tar .
+  tar -cf ${out}/{rootfs}.tar -C ${rootfs} .
+}
 
-cat <<EOF > $out/Dockerfile
+dockerfile() {
+  cat <<EOF > ${out}/tag
+${version}
+EOF
+
+  cat <<EOF > ${out}/Dockerfile
 FROM scratch
 
-ADD rootfs.tar /
+ADD {rootfs}.tar /
 
-ENV PATH /bin
+ENV \
+  PATH /bin \
+  LANG=C.UTF-8 \
+  LD_LIBRARY_PATH=/lib
 
 ENTRYPOINT [ "/bin/concourse" ]
 EOF
+}
 
 
+mkdirs
+download
+build_rootfs
+dockerfile
