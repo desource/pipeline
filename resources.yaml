@@ -1,0 +1,49 @@
+jobs:
+- name: acbuild
+  serial: true
+  plan:
+  - get: acbuild
+  - put: acbuild-resource
+    params:
+      build: acbuild
+      
+- name: acbuild-gstore
+  serial: true
+  plan:
+  - get: acbuild-resource
+    trigger: true
+    passed: [acbuild]
+  - get: acbuild-gstore
+  - task: build
+    file: acbuild-gstore/build.yaml
+  - put: acbuild-gstore-resource
+    params:
+      build: out
+
+resources:
+- name: acbuild
+  type: git
+  source:
+    uri: https://github.com/desource/acbuild-resource.git
+    branch: dev
+
+- name: acbuild-resource
+  type: docker-image
+  source:
+    repository: quay.io/desource/acbuild-resource
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+- name: acbuild-gstore
+  type: git
+  source:
+    uri: https://github.com/desource/acbuild-gstore-resource.git
+    branch: dev
+
+- name: acbuild-gstore-resource
+  type: docker-image
+  source:
+    repository: quay.io/desource/acbuild-gstore-resource
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    

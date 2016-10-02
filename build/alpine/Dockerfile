@@ -2,12 +2,14 @@ FROM gliderlabs/alpine:edge
 
 RUN \
   apk add --no-cache \
+    bash \
     curl \
     tar \
     gcc \
     g++ \
     make \
     git \
+    gnupg1 \
     autoconf \
     automake \
     cmake \

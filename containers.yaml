@@ -23,15 +23,10 @@ jobs:
   - do:
     - aggregate:
       - get: container
-        resource: container-haproxy
-        trigger: true
+        resource: haproxy-container
       - get: libressl-ci
-        resource: libressl-src
-        trigger: true
       - get: libslz-ci
-        trigger: true
       - get: liblua-ci
-        trigger: true
     - aggregate:
       - task: libressl
         file: libressl-ci/build.yaml
@@ -67,12 +62,10 @@ jobs:
     - aggregate:
       - get: src
         resource: nginx-src
-        trigger: true
-      - get: libressl-src
-        trigger: true
+      - get: libressl-ci
     - aggregate:
         - task: libressl
-          file: libressl-src/build.yaml
+          file: libressl-ci/build.yaml
     - task: nginx
       file: src/build.yaml
     - put: docker-nginx
@@ -100,10 +93,8 @@ jobs:
   - do:
     - aggregate:
       - get: glibc-src
-        trigger: true
       - get: src
         resource: java-src
-        trigger: true
     - task: glibc
       file: glibc-src/build.yaml
     - task: java
@@ -134,10 +125,8 @@ jobs:
     - aggregate:
         - get: src
           resource: elasticsearch-src
-          trigger: true
         - get: docker-java
           passed: [java]
-          trigger: true
     - task: elasticsearch
       file: src/build.yaml
     - put: docker-elasticsearch
@@ -165,7 +154,6 @@ jobs:
   - do:
     - get: src
       resource: nodejs-src
-      trigger: true
     - task: nodejs
       file: src/build.yaml
     - put: docker-nodejs
@@ -194,10 +182,8 @@ jobs:
     - aggregate:
       - get: docker-nodejs
         passed: [nodejs]
-        trigger: true
       - get: src
         resource: kibana-src
-        trigger: true
     - task: kibana
       file: src/build.yaml
     - put: docker-kibana
@@ -226,9 +212,7 @@ jobs:
     - aggregate:
       - get: src
         resource: heka-git
-        trigger: true
       - get: heka-container-src
-        trigger: true
     - task: heka
       file: heka-container-src/build.yaml
     - put: docker-heka
@@ -256,7 +240,6 @@ jobs:
     - aggregate:
       - get: skydns-git
       - get: skydns-container-src
-        trigger: true
     - task: skydns
       file: skydns-container-src/build.yaml
     - put: docker-skydns
@@ -285,9 +268,7 @@ jobs:
     - aggregate:
       - get: container
         resource: container-concourse
-        trigger: true
       - get: glibc-src
-        trigger: true
     - task: glibc
       file: glibc-src/build.yaml
     - task: concourse
@@ -341,7 +322,7 @@ resources:
   source:
     url: {{slack-notifications-url}}
 
-- name: libressl-src
+- name: libressl-ci
   type: git
   source:
     uri: https://github.com/desource/libressl.git
@@ -361,10 +342,10 @@ resources:
   source:
     uri: https://github.com/desource/glibc.git
 
-- name: container-haproxy
+- name: haproxy-container
   type: git
   source:
-    uri: https://github.com/desource/container-haproxy.git
+    uri: https://github.com/desource/haproxy-container.git
 
 - name: docker-haproxy
   type: docker-image

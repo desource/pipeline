@@ -1,0 +1,66 @@
+jobs:
+- name: skydns
+  plan:
+  - do:
+    - aggregate:
+      - get: skydns-git
+      - get: skydns-container-src
+        trigger: true
+    # - task: skydns
+    #   file: skydns-container-src/build.yaml
+    # - put: docker-skydns
+    #   params:
+    #     build: skydns-build
+    on_failure:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":monkey_face: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+
+resources:
+- name: pipeline
+  type: git
+  source:
+    uri: https://github.com/desource/pipeline.git
+    
+- name: slack
+  type: slack-notification
+  source:
+    bump: 2
+    url: {{slack-notifications-url}}
+
+- name: skydns-git
+  type: git
+  source:
+    uri: https://github.com/skynetservices/skydns.git
+    branch: 2.5.3a
+
+- name: skydns-container-src
+  type: git
+  source:
+    uri: https://github.com/desource/container-skydns.git
+    tag: next
+
+- name: docker-skydns
+  type: docker-image
+  source:
+    repository: quay.io/desource/skydns
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: quay.io/desource/slack-resource
