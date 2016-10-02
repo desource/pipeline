@@ -33,9 +33,10 @@ jobs:
         file: liblua-ci/build.yaml
     - task: haproxy
       file: container/build.yaml
-    - put: docker-haproxy
+    - put: haproxy-docker
       params:
         build: out
+        tag: out/version
     on_failure:
       put: slack
       params:
@@ -57,17 +58,18 @@ jobs:
   plan:
   - do:
     - aggregate:
-      - get: src
-        resource: nginx-src
+      - get: container
+        resource: nginx-container
       - get: libressl-ci
     - aggregate:
         - task: libressl
           file: libressl-ci/build.yaml
     - task: nginx
-      file: src/build.yaml
-    - put: docker-nginx
+      file: container/build.yaml
+    - put: nginx-docker
       params:
         build: out
+        tag: out/version
     on_failure:
       put: slack
       params:
@@ -85,20 +87,52 @@ jobs:
         always_notify: true
         icon_emoji: ":concourse:"
 
+- name: skydns
+  plan:
+  - do:
+    - aggregate:
+      - get: src
+        resource: skydns-git
+      - get: container
+        resource: skydns-container
+    - task: skydns
+      file: container/build.yaml
+    - put: skydns-docker
+      params:
+        build: out
+        tag: out/version
+    on_failure:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":monkey_face: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+        
 - name: java
   plan:
   - do:
     - aggregate:
       - get: glibc-ci
-      - get: src
-        resource: java-src
+      - get: container
+        resource: java-container
     - task: glibc
       file: glibc-ci/build.yaml
     - task: java
-      file: src/build.yaml
-    - put: docker-java
+      file: container/build.yaml
+    - put: java-docker
       params:
         build: out
+        tag: out/version
     on_failure:
       put: slack
       params:
@@ -120,15 +154,16 @@ jobs:
   plan:
   - do:
     - aggregate:
-        - get: src
-          resource: elasticsearch-src
-        - get: docker-java
+        - get: java-docker
           passed: [java]
+        - get: container
+          resource: elasticsearch-container
     - task: elasticsearch
-      file: src/build.yaml
-    - put: docker-elasticsearch
+      file: container/build.yaml
+    - put: elasticsearch-docker
       params:
         build: out
+        tag: out/version
     on_failure:
       put: slack
       params:
@@ -149,13 +184,14 @@ jobs:
 - name: nodejs
   plan:
   - do:
-    - get: src
-      resource: nodejs-src
+    - get: container
+      resource: nodejs-container
     - task: nodejs
-      file: src/build.yaml
-    - put: docker-nodejs
+      file: container/build.yaml
+    - put: nodejs-docker
       params:
         build: out
+        tag: out/version
     on_failure:
       put: slack
       params:
@@ -177,15 +213,16 @@ jobs:
   plan:
   - do:
     - aggregate:
-      - get: docker-nodejs
+      - get: nodejs-docker
         passed: [nodejs]
-      - get: src
-        resource: kibana-src
+      - get: container
+        resource: kibana-container
     - task: kibana
-      file: src/build.yaml
-    - put: docker-kibana
+      file: container/build.yaml
+    - put: kibana-docker
       params:
         build: out
+        tag: out/version
     on_failure:
       put: slack
       params:
@@ -231,34 +268,6 @@ jobs:
         username: concourse
         icon_emoji: ":concourse:"
 
-- name: skydns
-  plan:
-  - do:
-    - aggregate:
-      - get: skydns-git
-      - get: skydns-container-src
-    - task: skydns
-      file: skydns-container-src/build.yaml
-    - put: docker-skydns
-      params:
-        build: skydns-build
-    on_failure:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":monkey_face: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-
 resources:
 - name: pipeline
   type: git
@@ -295,37 +304,62 @@ resources:
   source:
     uri: https://github.com/desource/haproxy-container.git
 
-- name: docker-haproxy
+- name: haproxy-docker
   type: docker-image
   source:
     repository: quay.io/desource/haproxy
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: nginx-src
+- name: nginx-container
   type: git
   source:
-    uri: https://github.com/desource/container-nginx.git
+    uri: https://github.com/desource/nginx-container.git
 
-- name: java-src
-  type: git
+- name: nginx-docker
+  type: docker-image
   source:
-    uri: https://github.com/desource/container-java.git
+    repository: quay.io/desource/nginx
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
 
-- name: elasticsearch-src
+- name: skydns-git
   type: git
   source:
-    uri: https://github.com/desource/container-elasticsearch.git
+    uri: https://github.com/skynetservices/skydns.git
+    branch: 2.5.3a
 
-- name: nodejs-src
+- name: skydns-container
   type: git
   source:
-    uri: https://github.com/desource/container-nodejs.git
+    uri: https://github.com/desource/skydns-container.git
 
-- name: kibana-src
+- name: java-container
   type: git
   source:
-    uri: https://github.com/desource/container-kibana.git
+    uri: https://github.com/desource/java-container.git
+
+- name: java-docker
+  type: docker-image
+  source:
+    repository: quay.io/desource/java
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    
+- name: elasticsearch-container
+  type: git
+  source:
+    uri: https://github.com/desource/elasticsearch-container.git
+
+- name: nodejs-container
+  type: git
+  source:
+    uri: https://github.com/desource/nodejs-container.git
+
+- name: kibana-container
+  type: git
+  source:
+    uri: https://github.com/desource/kibana-container.git
 
 - name: heka-git
   type: git
@@ -339,54 +373,28 @@ resources:
   source:
     uri: https://github.com/desource/container-heka.git
 
-- name: skydns-git
-  type: git
-  source:
-    uri: https://github.com/skynetservices/skydns.git
-    branch: 2.5.3a
-
-- name: skydns-container-src
-  type: git
-  source:
-    uri: https://github.com/desource/container-skydns.git
-    tag: next
-
-- name: docker-nginx
-  type: docker-image
-  source:
-    repository: quay.io/desource/nginx
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: docker-java
-  type: docker-image
-  source:
-    repository: quay.io/desource/java
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: docker-elasticsearch
+- name: elasticsearch-docker
   type: docker-image
   source:
     repository: quay.io/desource/elasticsearch
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: docker-nodejs
+- name: nodejs-docker
   type: docker-image
   source:
     repository: quay.io/desource/nodejs
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: docker-kibana
+- name: kibana-docker
   type: docker-image
   source:
     repository: quay.io/desource/kibana
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
-- name: docker-skydns
+- name: skydns-docker
   type: docker-image
   source:
     repository: quay.io/desource/skydns
@@ -397,13 +405,6 @@ resources:
   type: docker-image
   source:
     repository: quay.io/desource/heka
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-
-- name: docker-concourse
-  type: docker-image
-  source:
-    repository: quay.io/desource/concourse
     username: {{quay-io-username}}
     password: {{quay-io-password}}
 
