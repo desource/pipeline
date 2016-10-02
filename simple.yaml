@@ -5,7 +5,6 @@ jobs:
     - aggregate:
       - get: skydns-git
       - get: skydns-container-src
-        trigger: true
     # - task: skydns
     #   file: skydns-container-src/build.yaml
     # - put: docker-skydns

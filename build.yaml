@@ -1,0 +1,49 @@
+jobs:
+- name: alpine-build
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-alpine-build
+    params:
+      build: pipeline/build/alpine
+
+- name: fedora-build
+  serial: true
+  plan:
+  - get: pipeline
+  - put: docker-fedora-build
+    params:
+      build: pipeline/build/fedora
+
+resources:
+- name: pipeline
+  type: git
+  source:
+    uri: https://github.com/desource/pipeline.git
+
+- name: slack
+  type: slack-notification
+  source:
+    url: {{slack-notifications-url}}
+
+- name: docker-alpine-build
+  type: docker-image
+  source:
+    repository: quay.io/desource/alpine
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: build
+
+- name: docker-fedora-build
+  type: docker-image
+  source:
+    repository: quay.io/desource/fedora
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+    tag: build
+
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource

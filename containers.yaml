@@ -10,12 +10,9 @@ groups:
   - elasticsearch
   - nodejs
   - kibana
-  - heka
-- name: build
+- name: heka
   jobs:
-  - concourse
-  - alpine-build
-  - fedora-build
+  - heka
 
 jobs:
 - name: haproxy
@@ -92,11 +89,11 @@ jobs:
   plan:
   - do:
     - aggregate:
-      - get: glibc-src
+      - get: glibc-ci
       - get: src
         resource: java-src
     - task: glibc
-      file: glibc-src/build.yaml
+      file: glibc-ci/build.yaml
     - task: java
       file: src/build.yaml
     - put: docker-java
@@ -262,55 +259,6 @@ jobs:
         always_notify: true
         icon_emoji: ":concourse:"
 
-- name: concourse
-  plan:
-  - do:
-    - aggregate:
-      - get: container
-        resource: container-concourse
-      - get: glibc-src
-    - task: glibc
-      file: glibc-src/build.yaml
-    - task: concourse
-      file: container/build.yaml
-    - put: docker-concourse
-      params:
-        build: out
-        tag: out/tag
-    on_failure:
-      put: slack
-      params:
-        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-
-
-- name: alpine-build
-  serial: true
-  plan:
-  - get: pipeline
-  - put: docker-alpine-build
-    params:
-      build: pipeline/build/alpine
-
-- name: fedora-build
-  serial: true
-  plan:
-  - get: pipeline
-  - put: docker-fedora-build
-    params:
-      build: pipeline/build/fedora
-
 resources:
 - name: pipeline
   type: git
@@ -337,7 +285,7 @@ resources:
   source:
     uri: https://github.com/desource/liblua.git
     
-- name: glibc-src
+- name: glibc-ci
   type: git
   source:
     uri: https://github.com/desource/glibc.git
@@ -403,12 +351,6 @@ resources:
     uri: https://github.com/desource/container-skydns.git
     tag: next
 
-
-- name: container-concourse
-  type: git
-  source:
-    uri: https://github.com/desource/container-concourse.git
-
 - name: docker-nginx
   type: docker-image
   source:
@@ -464,22 +406,6 @@ resources:
     repository: quay.io/desource/concourse
     username: {{quay-io-username}}
     password: {{quay-io-password}}
-
-- name: docker-alpine-build
-  type: docker-image
-  source:
-    repository: quay.io/desource/alpine
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-    tag: build
-
-- name: docker-fedora-build
-  type: docker-image
-  source:
-    repository: quay.io/desource/fedora
-    username: {{quay-io-username}}
-    password: {{quay-io-password}}
-    tag: build
 
 resource_types:
 - name: slack-notification

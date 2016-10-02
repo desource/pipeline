@@ -1,0 +1,61 @@
+jobs:
+- name: concourse
+  plan:
+  - do:
+    - aggregate:
+      - get: container
+        resource: concourse-container
+      - get: glibc-ci
+    - task: glibc
+      file: glibc-ci/build.yaml
+    - task: concourse
+      file: container/build.yaml
+    - put: concourse-docker
+      params:
+        build: out
+        tag: out/tag
+    on_failure:
+      put: slack
+      params:
+        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+    on_success:
+      put: slack
+      params:
+        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
+        channel: "#general"
+        username: concourse
+        always_notify: true
+        icon_emoji: ":concourse:"
+
+resources:
+- name: slack
+  type: slack-notification
+  source:
+    url: {{slack-notifications-url}}
+    
+- name: glibc-ci
+  type: git
+  source:
+    uri: https://github.com/desource/glibc.git
+
+- name: concourse-container
+  type: git
+  source:
+    uri: https://github.com/desource/concourse-container.git
+
+- name: concourse-docker
+  type: docker-image
+  source:
+    repository: quay.io/desource/concourse
+    username: {{quay-io-username}}
+    password: {{quay-io-password}}
+
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
