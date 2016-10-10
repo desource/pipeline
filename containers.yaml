@@ -21,9 +21,13 @@ jobs:
     - aggregate:
       - get: container
         resource: haproxy-container
+        trigger: true
       - get: libressl-ci
+        trigger: true
       - get: libslz-ci
+        trigger: true
       - get: liblua-ci
+        trigger: true
     - aggregate:
       - task: libressl
         file: libressl-ci/build.yaml
@@ -37,22 +41,6 @@ jobs:
       params:
         build: out
         tag: out/version
-    on_failure:
-      put: slack
-      params:
-        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
 
 - name: nginx
   plan:
@@ -60,7 +48,9 @@ jobs:
     - aggregate:
       - get: container
         resource: nginx-container
+        trigger: true
       - get: libressl-ci
+        trigger: true
     - aggregate:
         - task: libressl
           file: libressl-ci/build.yaml
@@ -70,22 +60,6 @@ jobs:
       params:
         build: out
         tag: out/version
-    on_failure:
-      put: slack
-      params:
-        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
 
 - name: skydns
   plan:
@@ -93,38 +67,26 @@ jobs:
     - aggregate:
       - get: src
         resource: skydns-git
+        trigger: true
       - get: container
         resource: skydns-container
+        trigger: true
     - task: skydns
       file: container/build.yaml
     - put: skydns-docker
       params:
         build: out
         tag: out/version
-    on_failure:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":monkey_face: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-        
+
 - name: java
   plan:
   - do:
     - aggregate:
       - get: glibc-ci
+        trigger: true
       - get: container
         resource: java-container
+        trigger: true
     - task: glibc
       file: glibc-ci/build.yaml
     - task: java
@@ -133,22 +95,6 @@ jobs:
       params:
         build: out
         tag: out/version
-    on_failure:
-      put: slack
-      params:
-        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
 
 - name: elasticsearch
   plan:
@@ -156,58 +102,29 @@ jobs:
     - aggregate:
         - get: java-docker
           passed: [java]
+          trigger: true
         - get: container
           resource: elasticsearch-container
+          trigger: true
     - task: elasticsearch
       file: container/build.yaml
     - put: elasticsearch-docker
       params:
         build: out
         tag: out/version
-    on_failure:
-      put: slack
-      params:
-        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
 
 - name: nodejs
   plan:
   - do:
     - get: container
       resource: nodejs-container
+      trigger: true
     - task: nodejs
       file: container/build.yaml
     - put: nodejs-docker
       params:
         build: out
         tag: out/version
-    on_failure:
-      put: slack
-      params:
-        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
 
 - name: kibana
   plan:
@@ -215,30 +132,16 @@ jobs:
     - aggregate:
       - get: nodejs-docker
         passed: [nodejs]
+        trigger: true
       - get: container
         resource: kibana-container
+        trigger: true
     - task: kibana
       file: container/build.yaml
     - put: kibana-docker
       params:
         build: out
         tag: out/version
-    on_failure:
-      put: slack
-      params:
-        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
 
 - name: heka
   plan:
@@ -246,27 +149,14 @@ jobs:
     - aggregate:
       - get: src
         resource: heka-git
+        trigger: true
       - get: heka-container-src
+        trigger: true
     - task: heka
       file: heka-container-src/build.yaml
     - put: docker-heka
       params:
         build: out
-    on_failure:
-      put: slack
-      params:
-        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        icon_emoji: ":concourse:"
 
 resources:
 - name: pipeline
@@ -283,17 +173,17 @@ resources:
   type: git
   source:
     uri: https://github.com/desource/libressl.git
-    
+
 - name: libslz-ci
   type: git
   source:
     uri: https://github.com/desource/libslz.git
-    
+
 - name: liblua-ci
   type: git
   source:
     uri: https://github.com/desource/liblua.git
-    
+
 - name: glibc-ci
   type: git
   source:
@@ -345,7 +235,7 @@ resources:
     repository: quay.io/desource/java
     username: {{quay-io-username}}
     password: {{quay-io-password}}
-    
+
 - name: elasticsearch-container
   type: git
   source:
