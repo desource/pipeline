@@ -14,22 +14,6 @@ jobs:
       params:
         build: out
         tag: out/tag
-    on_failure:
-      put: slack
-      params:
-        text: ":boom: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
-    on_success:
-      put: slack
-      params:
-        text: ":speak_no_evil: https://ci.desource.net/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME"
-        channel: "#general"
-        username: concourse
-        always_notify: true
-        icon_emoji: ":concourse:"
 
 resources:
 - name: slack
