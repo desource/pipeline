@@ -15,7 +15,7 @@ jobs:
     passed: [acbuild]
   - get: acbuild-gstore
   - task: build
-    file: acbuild-gstore/build.yaml
+    file: acbuild-gstore/ci/build.yaml
   - put: acbuild-gstore-resource
     params:
       build: out

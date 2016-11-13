@@ -16,11 +16,6 @@ jobs:
         tag: out/tag
 
 resources:
-- name: slack
-  type: slack-notification
-  source:
-    url: {{slack-notifications-url}}
-    
 - name: glibc-ci
   type: git
   source:
@@ -37,9 +32,3 @@ resources:
     repository: quay.io/desource/concourse
     username: {{quay-io-username}}
     password: {{quay-io-password}}
-
-resource_types:
-- name: slack-notification
-  type: docker-image
-  source:
-    repository: cfcommunity/slack-notification-resource

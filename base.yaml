@@ -4,7 +4,7 @@ groups:
   - centos-7
   - ubuntu-trusty
   - ubuntu-xenial
-    
+
 jobs:
 - name: centos-7
   serial: true
@@ -36,11 +36,6 @@ resources:
   source:
     uri: https://github.com/desource/pipeline.git
 
-- name: slack
-  type: slack-notification
-  source:
-    url: {{slack-notifications-url}}
-    
 - name: docker-centos-7
   type: docker-image
   source:
@@ -64,9 +59,3 @@ resources:
     username: {{quay-io-username}}
     password: {{quay-io-password}}
     tag: xenial
-    
-resource_types:
-- name: slack-notification
-  type: docker-image
-  source:
-    repository: cfcommunity/slack-notification-resource
