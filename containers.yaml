@@ -26,15 +26,15 @@ jobs:
         trigger: true
       - get: libslz-ci
         trigger: true
-      - get: liblua-ci
-        trigger: true
+      # - get: liblua-ci
+      #   trigger: true
     - aggregate:
       - task: libressl
         file: libressl-ci/build.yaml
       - task: libslz
         file: libslz-ci/build.yaml
-      - task: liblua
-        file: liblua-ci/build.yaml
+      # - task: liblua
+      #   file: liblua-ci/build.yaml
     - task: haproxy
       file: container/build.yaml
     - put: haproxy-docker
